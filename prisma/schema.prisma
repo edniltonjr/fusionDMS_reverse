@@ -1,0 +1,684 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model atvpw_bkp_t02_usuario {
+  t02_id                              BigInt?
+  t02_descricao                       String?   @db.VarChar
+  t02_tipo                            String?   @db.VarChar
+  t02_login                           String?   @db.VarChar
+  t02_senha                           String?   @db.VarChar
+  t02_empresa_id                      BigInt?
+  t02_perfil_id                       BigInt?
+  t02_codigo_erp                      String?   @db.VarChar
+  t02_email                           String?
+  t02_telefone                        String?   @db.VarChar
+  t02_sn_exibe_help_campos            String?   @db.Char(1)
+  t02_googleapi                       String?   @db.VarChar
+  t02_primeiro_acesso                 String?   @db.Char(1)
+  t02_ordem_colunas_form_cargas       String?
+  t02_data_hora_atualizacao           DateTime? @db.Timestamp(6)
+  t02_filial_expedicao_padrao         BigInt?
+  t02_filiais_fatura_padrao           String?   @db.VarChar
+  t02_situacao                        BigInt?
+  t02_faixa_valor                     String?   @db.VarChar
+  t02_habilita_botao_ped_formar_carga String?   @db.Char(1)
+
+  @@ignore
+}
+
+model bairros {
+  id          BigInt        @id @default(autoincrement())
+  cidade_id   BigInt
+  nome        String        @db.VarChar(255)
+  ibge_id     BigInt?
+  cidades     cidades       @relation(fields: [cidade_id], references: [id], map: "FK_cidade_bairro")
+  subdistrito subdistrito[]
+}
+
+model cidades {
+  id      BigInt    @id(map: "cidade_pkey") @default(autoincrement())
+  nome    String    @db.VarChar(255)
+  estado  String    @db.VarChar(2)
+  ibge_id BigInt?
+  bairros bairros[]
+}
+
+model clientes {
+  cnpjcliente             String    @id @db.VarChar(45)
+  fantasia                String?   @db.VarChar(255)
+  razsocial               String    @db.VarChar(255)
+  endereco                String    @db.VarChar(255)
+  uf                      String    @db.VarChar(45)
+  cidade                  String    @db.VarChar(45)
+  cep                     String    @default("") @db.VarChar
+  longitude               Float?
+  latitude                Float?
+  local_confirmado        String    @default("N") @db.Char(1)
+  bairro                  String?   @db.VarChar(45)
+  email1                  String?   @db.VarChar(100)
+  email2                  String?   @db.VarChar(100)
+  email3                  String?   @db.VarChar(100)
+  telefone_fixo1          String?   @db.VarChar(45)
+  telefone_fixo2          String?   @db.VarChar(45)
+  celular                 String?   @db.VarChar(45)
+  senha_portal            String?   @db.VarChar(45)
+  sn_verificado_sefaz     String    @default("N") @db.Char(1)
+  inscricao_estadual      String?   @db.VarChar(45)
+  data_inicio_atividades  DateTime? @db.Date
+  regime_apuracao         String?   @db.VarChar(45)
+  cnae                    String?   @db.VarChar(45)
+  numero_endereco         String?   @db.VarChar(45)
+  consta_cadastro_sefaz   String?   @db.Char(1)
+  municipio_id            BigInt?
+  fax                     String?   @db.VarChar(45)
+  tipo_pessoa             String?   @db.VarChar(45)
+  sexo                    String?   @db.VarChar(45)
+  estado_civil            String?   @db.VarChar(45)
+  utiliza_insc_estadual   String?   @db.VarChar(45)
+  inscricao_municipal     String?   @db.VarChar(45)
+  referencia_para_entrega String?   @db.VarChar(45)
+  data_hora_atualizacao   DateTime? @default(now()) @db.Timestamp(6)
+  qualidade_geocod        Int       @default(0) @db.SmallInt
+  recuperar_senha_token   String?   @db.VarChar(200)
+  cli_data_sincronizacao  DateTime  @default(dbgenerated("'2020-07-24 21:15:43.179464'::timestamp without time zone")) @db.Timestamp(6)
+  origem_geocodificacao   String    @default("Base de Conhecimento (U)") @db.VarChar(255)
+  habilitado              String?   @default("N") @db.Char(1)
+
+  @@index([cep, longitude, latitude], map: "idx_clientes_cep_latitude_longitude")
+  @@index([fantasia], map: "idx_clientes_fantasia")
+  @@index([local_confirmado], map: "idx_clientes_local_confirmado_id")
+}
+
+model config_desvios {
+  nome       String  @db.VarChar
+  lambda     String  @db.VarChar
+  executor   String  @default("MySQL") @db.VarChar
+  sigla      String  @id @db.VarChar
+  ativo      Int     @default(1) @db.SmallInt
+  parametros String?
+
+  @@index([executor, ativo], map: "idx_ativo_executor")
+}
+
+model fila_kmRealizado {
+  alias_db        String    @db.VarChar(255)
+  empresa_id      Int
+  romaneio_id     Int
+  data_saida      DateTime  @db.Timestamp(6)
+  data_retorno    DateTime  @db.Timestamp(6)
+  status          String    @default("Fila") @db.VarChar(120)
+  info            String?
+  data_registro   DateTime? @default(now()) @db.Timestamp(6)
+  data_processado DateTime? @db.Timestamp(6)
+  transporte_id   Int?
+  motorista_id    Int?
+
+  @@id([alias_db, empresa_id, romaneio_id])
+}
+
+model log01_exclusao_ids_tabela {
+  log01_apelido_bd  String   @db.VarChar
+  log01_id          BigInt
+  log01_id_empresa  BigInt
+  log01_tabela      String   @db.VarChar
+  log01_id_removido BigInt
+  log01_data_hora   DateTime @default(now()) @db.Timestamp(6)
+
+  @@id([log01_apelido_bd, log01_id])
+  @@unique([log01_apelido_bd, log01_id_empresa, log01_tabela, log01_id_removido], map: "ui_exclusao_id")
+  @@index([log01_id_empresa], map: "idx_log01_empresa")
+  @@index([log01_id_empresa, log01_tabela], map: "idx_log01_empresa_tabela")
+  @@index([log01_id_empresa, log01_tabela, log01_data_hora], map: "idx_log01_empresa_tabela_dia")
+  @@index([log01_id_empresa, log01_tabela, log01_id_removido], map: "idx_log01_empresa_tabela_id")
+}
+
+model log_erro_importacao {
+  id           BigInt   @id @default(autoincrement())
+  nome_tabela  String   @db.VarChar
+  data_hora    DateTime @default(now()) @db.Timestamp(6)
+  empresas_ids String?  @db.VarChar
+  erro         String
+  apelido_bd   String   @db.VarChar
+
+  @@index([nome_tabela, data_hora], map: "idx_log_erro_importacao1")
+  @@index([nome_tabela], map: "idx_log_erro_importacao2")
+}
+
+model log_sequenciamento_cliente {
+  id                  BigInt   @id @default(autoincrement())
+  empresa             BigInt
+  tipo_agrupamento    String   @db.VarChar
+  cliente_id          BigInt
+  cliente_id_anterior BigInt?
+  ordem               Int
+  data_hora           DateTime @db.Timestamp(6)
+  agrupamento_id      BigInt?
+
+  @@index([empresa, tipo_agrupamento, cliente_id, cliente_id_anterior], map: "idx_log_seq_cli_emp_cli_ant_tipo")
+  @@index([empresa, tipo_agrupamento, cliente_id, cliente_id_anterior, data_hora], map: "idx_log_seq_cli_emp_cli_ant_tipo_data")
+  @@index([empresa, tipo_agrupamento, cliente_id, data_hora], map: "idx_log_seq_cli_emp_cli_tipo_data")
+  @@index([empresa, tipo_agrupamento, cliente_id], map: "idx_log_seq_cli_emp_tipo")
+}
+
+model notificacao {
+  id               Int      @id @default(autoincrement())
+  title            String   @db.VarChar(255)
+  description      String?
+  date_end         DateTime @db.Timestamp(6)
+  company_affected String?  @db.VarChar
+  type             String?  @default("info") @db.VarChar
+  times_to_show    Int      @default(1)
+  active           Boolean? @default(true)
+}
+
+model pc01_parameters {
+  pc01_name        String  @id @db.VarChar
+  pc01_type        String? @default("TextBox") @db.VarChar
+  pc01_label       String  @db.VarChar
+  pc01_module      String  @db.VarChar
+  pc01_category    String  @db.VarChar
+  pc01_description String  @db.VarChar
+  pc01_default     String  @db.VarChar
+  pc01_config      Json?   @db.Json
+  pc01_type_vision String? @db.VarChar(255)
+
+  @@index([pc01_name], map: "idx_pc01_parameters_name")
+}
+
+model pc02_parameters_clients {
+  pc02_parameter_name String    @db.VarChar
+  pc02_client_cnpj    String    @db.VarChar
+  pc02_value          String    @db.VarChar
+  pc02_data_created   DateTime? @default(dbgenerated("'2020-07-06 12:34:58.282687'::timestamp without time zone")) @db.Timestamp(6)
+  pc02_data_updated   DateTime? @db.Timestamp(6)
+  pc02_extra          String?   @db.VarChar
+
+  @@id([pc02_parameter_name, pc02_client_cnpj])
+  @@index([pc02_client_cnpj], map: "idx_cpf")
+  @@index([pc02_client_cnpj, pc02_parameter_name], map: "idx_pc02_parameters_clients_cpf_parameter_name")
+  @@index([pc02_parameter_name], map: "idx_pc02_parameters_clients_parameter_name")
+}
+
+model pc03_email_notification_send {
+  pc03_id           Int       @id(map: "pc03_email_send_pkey") @default(autoincrement())
+  pc03_email        String    @db.VarChar
+  pc03_empresa_id   BigInt?
+  pc03_cnpj         String?   @db.VarChar
+  pc03_data_created DateTime? @default(now()) @db.Timestamp(6)
+  pc03_entrega_id   BigInt?
+  pc03_cliente_id   BigInt?
+  pc03_status       String?   @db.VarChar
+}
+
+model release_notes {
+  rn_id             BigInt   @id @default(autoincrement())
+  rn_titulo         String   @db.VarChar(255)
+  rn_descricao      String?
+  rn_versao         String   @db.VarChar(50)
+  rn_plataforma     String?  @default("Web") @db.VarChar
+  rn_data_liberacao DateTime @db.Timestamp(6)
+  rn_tipo           String   @default("Problema") @db.VarChar(50)
+}
+
+model servidores {
+  apelido             String  @id @db.VarChar
+  producao            Int     @default(1) @db.SmallInt
+  host                String  @db.VarChar
+  name                String  @db.VarChar
+  pindex              Int     @default(0)
+  port                Int     @default(0)
+  qtd_empresas        Int     @default(0)
+  qtd_veiculos_ativos Int     @default(0)
+  tipo                String  @default("0") @db.VarChar
+  user                String  @db.VarChar
+  inativo             Int     @default(0) @db.SmallInt
+  aws_size_machine    String? @db.VarChar(250)
+}
+
+model sis00_parametros_padroes {
+  sis00_id               BigInt  @id @default(autoincrement())
+  sis00_label            String? @default("0") @db.VarChar(100)
+  sis00_parametro        String  @db.VarChar(100)
+  sis00_valor            String  @db.VarChar(45)
+  sis00_descricao        String?
+  sis00_valores_padrao   String? @db.VarChar(100)
+  sis00_tipo             String? @db.VarChar(100)
+  sis00_modulos          String? @db.VarChar(255)
+  sis00_empresas_ids     String? @db.VarChar(45)
+  sis00_valor_instrucoes String? @db.VarChar(150)
+
+  @@index([sis00_parametro], map: "idx_sis00_parametros_padroes_txt")
+}
+
+model sis00_valor_parametro {
+  sis00_vp_id        BigInt  @id @default(autoincrement())
+  sis00_vp_nome      String? @db.VarChar(100)
+  sis00_vp_itens     String? @db.VarChar(300)
+  sis00_vp_valorreal String? @db.VarChar(50)
+}
+
+model sis01_empresa {
+  sis01_id                               BigInt                 @id @default(autoincrement())
+  sis01_situacao                         String                 @default("Pendente") @db.VarChar(100)
+  sis01_fantasia                         String                 @db.VarChar(100)
+  sis01_tipolicenca                      String                 @default("2") @db.VarChar(100)
+  sis01_cnpj                             String                 @db.VarChar(100)
+  sis01_validadelicenca                  DateTime?              @db.Timestamp(6)
+  sis01_site                             String?                @db.VarChar(100)
+  sis01_telefone                         String                 @db.VarChar(100)
+  sis01_razaosocial                      String                 @db.VarChar(100)
+  sis01_endereco                         String?                @db.VarChar(100)
+  sis01_cidade                           String?                @db.VarChar(100)
+  sis01_uf                               String?                @db.VarChar(100)
+  sis01_latitude                         Decimal?               @db.Decimal(10, 5)
+  sis01_longitude                        Decimal?               @db.Decimal(10, 5)
+  sis01_tel_televendas                   String?                @db.VarChar(100)
+  sis01_senha_ws                         String?                @db.VarChar(100)
+  sis01_data_ult_integracao              DateTime?              @db.Timestamp(6)
+  sis01_grupo_int_rastreador_atual       BigInt?                @default(0)
+  sis01_max_grupo_int_rastreador         Int?                   @default(0)
+  sis01_login_rastreador                 String?                @db.VarChar(100)
+  sis01_senha_rastreador                 String?                @db.VarChar(65)
+  sis01_email1_notificacao_monitoramento String?                @db.VarChar(200)
+  sis01_email2_notificacao_monitoramento String?                @db.VarChar(200)
+  sis01_email3_notificacao_monitoramento String?                @db.VarChar(200)
+  sis01_email1_notificacao_jornada       String?                @db.VarChar(200)
+  sis01_cep                              String?                @db.VarChar(46)
+  sis01_prod_pontos_por_km               Int?                   @default(0)
+  sis01_prod_pontos_por_entrega          Int?                   @default(0)
+  sis01_prod_pontos_por_peso             Int?                   @default(0)
+  sis01_segmento_cliente                 String?                @default("0") @db.VarChar(150)
+  sis01_data_kickoff                     DateTime               @default(now()) @db.Timestamp(6)
+  sis01_data_fim_projeto                 DateTime               @default(now()) @db.Timestamp(6)
+  sis01_tipo_integracao                  String?                @db.VarChar(5)
+  sis01_fase_atual                       String                 @default("0") @db.VarChar(150)
+  sis01_implantacao_existe               String?                @default("0") @db.Char(1)
+  sis01_implantador_id                   BigInt?                @default(0)
+  sis01_imei_sms_server                  String?                @db.VarChar(100)
+  sis01_data_inicio_projeto              DateTime?              @db.Date
+  sis01_responsavel1                     String?                @db.VarChar(100)
+  sis01_responsavel2                     String?                @db.VarChar(100)
+  sis01_responsavel3                     String?                @db.VarChar(100)
+  sis01_emailresp1                       String?                @db.VarChar(100)
+  sis01_emailresp2                       String?                @db.VarChar(100)
+  sis01_emailresp3                       String?                @db.VarChar(100)
+  sis01_problema_implantacao             String?                @db.VarChar(500)
+  sis01_qtd_veiculos_contratados         Int?                   @default(0)
+  sis01_user_mantis                      String?                @db.VarChar(100)
+  sis01_gerente_projeto                  String?                @db.VarChar(200)
+  sis01_ult_evento_env_ws                BigInt?
+  sis01_email_gerente_projeto            String                 @db.VarChar(200)
+  sis01_tel_gerente_projeto              String                 @db.VarChar(100)
+  sis01_str_conn_bd                      String?                @db.VarChar(200)
+  sis01_tipo_erp                         String?                @db.VarChar(200)
+  sis01_tipo_banco_dados                 String?                @db.VarChar
+  sis01_modulos_contratados              String?                @db.VarChar(500)
+  sis01_sn_sincronizacao_automatica      String                 @default("N") @db.Char(1)
+  sis01_bloqueio_integrador              String                 @default("N") @db.Char(1)
+  sis01_versao_integrador                String?                @db.VarChar(10)
+  sis01_data_ult_verifica_desvios        DateTime?              @db.Timestamp(6)
+  sis01_bloqueada                        Int?                   @default(0) @db.SmallInt
+  sis01_valor_por_veiculo_contrato       Decimal?               @db.Decimal(12, 2)
+  sis01_valor_por_veiculo_atual          Decimal?               @db.Decimal(12, 2)
+  sis01_business_group_id                Int?
+  sis01_email_portal                     String?                @db.VarChar(255)
+  sis01_senha_portal                     String?                @db.VarChar(255)
+  sis01_recsenha_token_portal            String?                @db.VarChar(100)
+  sis01_default_lang                     String?                @db.VarChar(5)
+  sis03_modulo_empresa                   sis03_modulo_empresa[]
+  t02_usuario                            t02_usuario[]
+
+  @@index([sis01_id, sis01_senha_ws], map: "Index_2")
+  @@index([sis01_cnpj, sis01_senha_ws], map: "idx_cnpj_senha")
+  @@index([sis01_id, sis01_bloqueada], map: "idx_id_bloqueada")
+  @@index([sis01_id, sis01_bloqueada, sis01_str_conn_bd], map: "idx_id_bloqueada_connbd")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model sis01_empresa_bkpeng4139 {
+  sis01_id                               BigInt?
+  sis01_situacao                         String?   @db.VarChar(100)
+  sis01_fantasia                         String?   @db.VarChar(100)
+  sis01_tipolicenca                      String?   @db.VarChar(100)
+  sis01_cnpj                             String?   @db.VarChar(100)
+  sis01_validadelicenca                  DateTime? @db.Timestamp(6)
+  sis01_site                             String?   @db.VarChar(100)
+  sis01_telefone                         String?   @db.VarChar(100)
+  sis01_razaosocial                      String?   @db.VarChar(100)
+  sis01_endereco                         String?   @db.VarChar(100)
+  sis01_cidade                           String?   @db.VarChar(100)
+  sis01_uf                               String?   @db.VarChar(100)
+  sis01_latitude                         Decimal?  @db.Decimal(10, 5)
+  sis01_longitude                        Decimal?  @db.Decimal(10, 5)
+  sis01_tel_televendas                   String?   @db.VarChar(100)
+  sis01_senha_ws                         String?   @db.VarChar(100)
+  sis01_data_ult_integracao              DateTime? @db.Timestamp(6)
+  sis01_grupo_int_rastreador_atual       BigInt?
+  sis01_max_grupo_int_rastreador         Int?
+  sis01_login_rastreador                 String?   @db.VarChar(100)
+  sis01_senha_rastreador                 String?   @db.VarChar(65)
+  sis01_email1_notificacao_monitoramento String?   @db.VarChar(200)
+  sis01_email2_notificacao_monitoramento String?   @db.VarChar(200)
+  sis01_email3_notificacao_monitoramento String?   @db.VarChar(200)
+  sis01_email1_notificacao_jornada       String?   @db.VarChar(200)
+  sis01_cep                              String?   @db.VarChar(46)
+  sis01_prod_pontos_por_km               Int?
+  sis01_prod_pontos_por_entrega          Int?
+  sis01_prod_pontos_por_peso             Int?
+  sis01_segmento_cliente                 String?   @db.VarChar(150)
+  sis01_data_kickoff                     DateTime? @db.Timestamp(6)
+  sis01_data_fim_projeto                 DateTime? @db.Timestamp(6)
+  sis01_tipo_integracao                  String?   @db.VarChar(5)
+  sis01_fase_atual                       String?   @db.VarChar(150)
+  sis01_implantacao_existe               String?   @db.Char(1)
+  sis01_implantador_id                   BigInt?
+  sis01_imei_sms_server                  String?   @db.VarChar(100)
+  sis01_data_inicio_projeto              DateTime? @db.Date
+  sis01_responsavel1                     String?   @db.VarChar(100)
+  sis01_responsavel2                     String?   @db.VarChar(100)
+  sis01_responsavel3                     String?   @db.VarChar(100)
+  sis01_emailresp1                       String?   @db.VarChar(100)
+  sis01_emailresp2                       String?   @db.VarChar(100)
+  sis01_emailresp3                       String?   @db.VarChar(100)
+  sis01_problema_implantacao             String?   @db.VarChar(500)
+  sis01_qtd_veiculos_contratados         Int?
+  sis01_user_mantis                      String?   @db.VarChar(100)
+  sis01_gerente_projeto                  String?   @db.VarChar(200)
+  sis01_ult_evento_env_ws                BigInt?
+  sis01_email_gerente_projeto            String?   @db.VarChar(200)
+  sis01_tel_gerente_projeto              String?   @db.VarChar(100)
+  sis01_str_conn_bd                      String?   @db.VarChar(200)
+  sis01_tipo_erp                         String?   @db.VarChar(200)
+  sis01_tipo_banco_dados                 String?   @db.VarChar
+  sis01_modulos_contratados              String?   @db.VarChar(500)
+  sis01_sn_sincronizacao_automatica      String?   @db.Char(1)
+  sis01_bloqueio_integrador              String?   @db.Char(1)
+  sis01_versao_integrador                String?   @db.VarChar(10)
+  sis01_data_ult_verifica_desvios        DateTime? @db.Timestamp(6)
+  sis01_bloqueada                        Int?      @db.SmallInt
+  sis01_valor_por_veiculo_contrato       Decimal?  @db.Decimal(12, 2)
+  sis01_valor_por_veiculo_atual          Decimal?  @db.Decimal(12, 2)
+  sis01_business_group_id                Int?
+
+  @@ignore
+}
+
+model sis01_parametros {
+  sis01_id           BigInt  @id @default(autoincrement())
+  sis01_empresa_id   BigInt
+  sis01_parametro_id BigInt
+  sis01_valor        String
+  sis01_usuario_id   BigInt?
+  sis01_filial_id    BigInt?
+
+  @@unique([sis01_empresa_id, sis01_filial_id, sis01_parametro_id], map: "sis01_idx_empresa_filial_parametro")
+  @@unique([sis01_empresa_id, sis01_parametro_id], map: "sis01_idx_unq_empresa_parametro")
+  @@unique([sis01_empresa_id, sis01_parametro_id])
+  @@index([sis01_empresa_id, sis01_parametro_id], map: "idx_empresa_parametroid")
+  @@index([sis01_empresa_id], map: "sis01_idx_empresa")
+}
+
+model sis02_modulo {
+  sis02_id             BigInt                 @id @default(autoincrement())
+  sis02_nome           String                 @db.VarChar(45)
+  sis02_mainpage_id    BigInt
+  sis03_modulo_empresa sis03_modulo_empresa[]
+
+  @@index([sis02_mainpage_id], map: "sis02_modulo_1")
+}
+
+model sis03_modulo_empresa {
+  sis03_id         BigInt        @id @default(autoincrement())
+  sis03_modulo_id  BigInt
+  sis03_empresa_id BigInt
+  sis01_empresa    sis01_empresa @relation(fields: [sis03_empresa_id], references: [sis01_id], map: "fk_sis03_modulo_empresa_2")
+  sis02_modulo     sis02_modulo  @relation(fields: [sis03_modulo_id], references: [sis02_id], map: "fk_sis03_modulo_empresa_1")
+
+  @@index([sis03_empresa_id], map: "sis03_idx_empresa")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model sis03_modulo_empresa_bkpeng4139 {
+  sis03_id         BigInt?
+  sis03_modulo_id  BigInt?
+  sis03_empresa_id BigInt?
+
+  @@ignore
+}
+
+model sis04_menu {
+  sis04_id                     BigInt                    @id @default(autoincrement())
+  sis04_ordem                  BigInt
+  sis04_nome                   String                    @db.VarChar(100)
+  sis04_codigo                 String                    @db.VarChar(45)
+  sis04_html_help              String                    @db.VarChar(100)
+  sis04_modulo_id              BigInt
+  sis04_html_interno           String                    @db.VarChar(200)
+  sis04_descricao              String
+  sis04_grupo_menu_id          BigInt?                   @default(0)
+  sis04_sn_utiliza_google_maps String                    @default("S") @db.Char(1)
+  sis04_qtd_dias_atv           BigInt?
+  sis04_atv_pre_req            String?                   @db.VarChar(45)
+  sis04_responsavel            String?
+  sis04_detalhes_atv           String?
+  sis04_url_material           String?
+  sis05_menu_dependencias      sis05_menu_dependencias[]
+  sis06_menu_funcoes           sis06_menu_funcoes[]
+
+  @@index([sis04_modulo_id], map: "is04_menu_1")
+}
+
+model sis05_menu_dependencias {
+  sis05_id      BigInt     @id @default(autoincrement())
+  sis05_menu_id BigInt
+  sis05_arquivo String     @db.VarChar(100)
+  sis05_versao  String?    @db.VarChar(150)
+  sis05_tipo    String     @db.VarChar(45)
+  sis05_ordem   Int
+  sis04_menu    sis04_menu @relation(fields: [sis05_menu_id], references: [sis04_id], map: "fk_sis05_menu_dependencias_1")
+}
+
+model sis06_menu_funcoes {
+  sis06_id                      BigInt     @id @default(autoincrement())
+  sis06_menu_id                 BigInt
+  sis06_funcao                  String     @db.VarChar(151)
+  sis06_sn_acesso               String     @default("S") @db.Char(1)
+  sis06_texto_help              String?
+  sis06_sn_acompanha_mouse_help String?    @db.Char(1)
+  sis06_posicao_help            String?    @db.VarChar(45)
+  sis06_id_componente           String?    @db.VarChar(45)
+  sis06_id_tela                 String?    @db.VarChar(50)
+  sis06_ordem_tela              String?    @db.VarChar(50)
+  sis04_menu                    sis04_menu @relation(fields: [sis06_menu_id], references: [sis04_id], map: "fk_sis06_menu_funcoes")
+
+  @@index([sis06_menu_id], map: "fk_sis06_menu_funcoes_1")
+}
+
+model sis07_grupo_menu {
+  sis07_id        BigInt @id @default(autoincrement())
+  sis07_modulo_id BigInt
+  sis07_nome      String @db.VarChar(100)
+  sis07_icon      String @db.VarChar(45)
+  sis07_ordem     Int    @default(0)
+}
+
+model sis114_licenca {
+  sis114_id                     BigInt    @id @default(autoincrement())
+  sis114_tipo                   String    @db.VarChar
+  sis114_empresa_id             BigInt
+  sis114_data_hora_expiracao    DateTime? @db.Timestamp(6)
+  sis114_data_hora_atualizacao  DateTime? @db.Timestamp(6)
+  sis114_usuario_id_atualizacao BigInt?
+  sis114_data_hora_cadastro     DateTime  @default(now()) @db.Timestamp(6)
+  sis114_usuario_id_cadastro    BigInt
+
+  @@index([sis114_empresa_id, sis114_data_hora_expiracao], map: "idx_sis114_empresa_data_expiracao")
+  @@index([sis114_empresa_id, sis114_tipo], map: "idx_sis114_empresa_tipo")
+  @@index([sis114_empresa_id, sis114_tipo, sis114_data_hora_expiracao], map: "idx_sis114_empresa_tipo_data_expiracao")
+}
+
+model sis116_business_group {
+  sis116_id     BigInt @id @default(autoincrement())
+  sis116_name   String @db.VarChar(255)
+  sis116_active Int    @default(1) @db.SmallInt
+}
+
+model subdistrito {
+  id        BigInt  @id @default(autoincrement())
+  bairro_id BigInt
+  limites   String?
+  ibge_id   BigInt?
+  bairros   bairros @relation(fields: [bairro_id], references: [id], map: "FK_bairro_subdistrito")
+}
+
+model t02_usuario {
+  t02_id                              BigInt         @id @default(autoincrement())
+  t02_descricao                       String         @db.VarChar
+  t02_tipo                            String         @db.VarChar
+  t02_login                           String         @unique(map: "ui_login") @db.VarChar
+  t02_senha                           String         @db.VarChar
+  t02_empresa_id                      BigInt?
+  t02_perfil_id                       BigInt?
+  t02_codigo_erp                      String?        @db.VarChar
+  t02_email                           String?
+  t02_telefone                        String?        @db.VarChar
+  t02_sn_exibe_help_campos            String         @default("S") @db.Char(1)
+  t02_googleapi                       String?        @default("P") @db.VarChar
+  t02_primeiro_acesso                 String?        @default("S") @db.Char(1)
+  t02_ordem_colunas_form_cargas       String?
+  t02_data_hora_atualizacao           DateTime?      @db.Timestamp(6)
+  t02_filial_expedicao_padrao         BigInt?
+  t02_filiais_fatura_padrao           String?        @db.VarChar
+  t02_situacao                        BigInt?        @default(1)
+  t02_faixa_valor                     String?        @db.VarChar
+  t02_habilita_botao_ped_formar_carga String         @default("N") @db.Char(1)
+  t02_lang_user                       String?        @db.VarChar(5)
+  t02_envia_email_data_sincronizacao  String         @default("N") @db.Char(1)
+  t02_perfil_transportadora           String         @default("N") @db.Char(1)
+  sis01_empresa                       sis01_empresa? @relation(fields: [t02_empresa_id], references: [sis01_id], onDelete: Restrict, map: "fk_t02_usuario_1")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model t02_usuario_bkpeng4139 {
+  t02_id                              BigInt?
+  t02_descricao                       String?   @db.VarChar
+  t02_tipo                            String?   @db.VarChar
+  t02_login                           String?   @db.VarChar
+  t02_senha                           String?   @db.VarChar
+  t02_empresa_id                      BigInt?
+  t02_perfil_id                       BigInt?
+  t02_codigo_erp                      String?   @db.VarChar
+  t02_email                           String?
+  t02_telefone                        String?   @db.VarChar
+  t02_sn_exibe_help_campos            String?   @db.Char(1)
+  t02_googleapi                       String?   @db.VarChar
+  t02_primeiro_acesso                 String?   @db.Char(1)
+  t02_ordem_colunas_form_cargas       String?
+  t02_data_hora_atualizacao           DateTime? @db.Timestamp(6)
+  t02_filial_expedicao_padrao         BigInt?
+  t02_filiais_fatura_padrao           String?   @db.VarChar
+  t02_situacao                        BigInt?
+  t02_faixa_valor                     String?   @db.VarChar
+  t02_habilita_botao_ped_formar_carga String?   @db.Char(1)
+
+  @@ignore
+}
+
+model t124_config_rastreador {
+  t124_id             BigInt  @default(autoincrement())
+  t124_apelido_bd     String  @db.VarChar
+  t124_nome           String  @db.VarChar(45)
+  t124_empresa_config String?
+
+  @@id([t124_apelido_bd, t124_id])
+}
+
+model t162_fila_processamento_integracao {
+  t162_id              Int       @id @default(autoincrement())
+  t162_empresa_id      Int
+  t162_status          String?   @default("N") @db.VarChar
+  t162_nome_arquivo    String    @db.VarChar
+  t162_nota_fiscal     String    @db.VarChar
+  t162_data_registro   DateTime? @default(now()) @db.Timestamp(6)
+  t162_data_finalizado DateTime? @db.Timestamp(6)
+  t162_alias_base      String    @db.VarChar
+  t162_obs             String?
+
+  @@index([t162_empresa_id, t162_data_finalizado, t162_status], map: "t162_empresa_id_t162_data_finalizado_t162_status")
+  @@index([t162_empresa_id, t162_data_registro, t162_status], map: "t162_empresa_id_t162_data_registro_t162_status")
+  @@index([t162_empresa_id, t162_status], map: "t162_empresa_id_t162_status")
+}
+
+model t16_cliente {
+  t16_id                      BigInt    @default(autoincrement())
+  t16_apelido_bd              String    @default("INTERNO") @db.VarChar(100)
+  t16_fantasia                String?   @db.VarChar(45)
+  t16_razsocial               String    @db.VarChar(45)
+  t16_cnpjcliente             String    @db.VarChar(45)
+  t16_endereco                String    @db.VarChar(255)
+  t16_uf                      String    @db.VarChar(45)
+  t16_cidade                  String    @db.VarChar(45)
+  t16_cep                     String    @db.VarChar(10)
+  t16_longitude               Float?
+  t16_latitude                Float?
+  t16_local_confirmado        String    @default("N") @db.Char(1)
+  t16_bairro                  String?   @db.VarChar(45)
+  t16_email1                  String?   @db.VarChar(100)
+  t16_email2                  String?   @db.VarChar(100)
+  t16_email3                  String?   @db.VarChar(100)
+  t16_telefone_fixo1          String?   @db.VarChar(45)
+  t16_telefone_fixo2          String?   @db.VarChar(45)
+  t16_celular                 String?   @db.VarChar(45)
+  t16_senha_portal            String?   @db.VarChar(45)
+  t16_sn_verificado_sefaz     String    @default("N") @db.Char(1)
+  t16_inscricao_estadual      String?   @db.VarChar(45)
+  t16_data_inicio_atividades  DateTime? @db.Date
+  t16_regime_apuracao         String?   @db.VarChar(45)
+  t16_cnae                    String?   @db.VarChar(45)
+  t16_numero_endereco         String?   @db.VarChar(45)
+  t16_consta_cadastro_sefaz   String?   @db.Char(1)
+  t16_municipio_id            BigInt?
+  t16_fax                     String?   @db.VarChar(45)
+  t16_tipo_pessoa             String?   @db.VarChar(45)
+  t16_sexo                    String?   @db.VarChar(45)
+  t16_estado_civil            String?   @db.VarChar(45)
+  t16_utiliza_insc_estadual   String?   @db.VarChar(45)
+  t16_inscricao_municipal     String?   @db.VarChar(45)
+  t16_referencia_para_entrega String?   @db.VarChar(45)
+  t16_data_hora_atualizacao   DateTime? @default(now()) @db.Timestamp(6)
+  t16_qualidade_geocod        Int       @default(0) @db.SmallInt
+  t16_origem_geocodificacao   String?   @default("Base de Conhecimento (I)") @db.VarChar
+
+  @@id([t16_apelido_bd, t16_id])
+  @@index([t16_cnpjcliente], map: "btree_idx_t16_cnpjcliente")
+  @@index([t16_data_hora_atualizacao], map: "btree_idx_t16_data_hora_atualizacao")
+  @@index([t16_cnpjcliente], map: "cnpj")
+  @@index([t16_apelido_bd, t16_cep], map: "idx_t16_cep_apelidobd")
+  @@index([t16_cep], map: "idx_t16_cliente_cep")
+  @@index([t16_fantasia], map: "idx_t16_cliente_fantasia")
+  @@index([t16_local_confirmado, t16_apelido_bd], map: "idx_t16_cliente_local_confirmado_id")
+  @@index([t16_id], map: "idx_t16_cliente_t16_id")
+  @@index([t16_cnpjcliente], map: "trgm_idx_t16_cnpjcliente")
+}
+
+model t44_cliente_empresa {
+  t44_apelido_bd                       String    @db.VarChar
+  t44_empresa_id                       BigInt
+  t44_cliente_id                       BigInt
+  t44_max_id                           BigInt
+  t44_data_hora_atualizacao            DateTime? @db.Timestamp(6)
+  t44_cnpj_cliente                     String?   @db.VarChar(45)
+  t44_dthr_atualizacao_min_med_entrega DateTime? @db.Timestamp(6)
+  t44_origem_geocodificacao            String?   @default("Base de Conhecimento (I)") @db.VarChar
+  t44_data_sincronizacao               DateTime  @default(now()) @db.Timestamp(6)
+
+  @@id([t44_apelido_bd, t44_empresa_id, t44_cliente_id])
+  @@index([t44_empresa_id], map: "idx_empresa")
+}
