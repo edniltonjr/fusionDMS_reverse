@@ -626,7 +626,7 @@ model sis06_menu_funcoes {
   sis06_id_componente           String?    @db.VarChar(45)
   sis06_id_tela                 String?    @db.VarChar(50)
   sis06_ordem_tela              String?    @db.VarChar(50)
-  sis04_menu                    sis04_menu @relation(fields: [sis06_menu_id], references: [sis04_id], map: "fk_sis06_menu_funcoes_1")
+  sis04_menu                    sis04_menu @relation(fields: [sis06_menu_id], references: [sis04_id])
 
   @@index([sis06_menu_id], map: "fk_sis06_menu_funcoes_1")
 }

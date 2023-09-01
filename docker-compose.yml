@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+    fusiondms_reverse:
+        image: postgres
+        container_name: fusion-db-container
+        restart: always
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=fusion
+            - POSTGRES_PASSWORD=123456
+            - POSTGRES_DB=fusion_db
+        volumes:
+            - pgdata:/data/postgres
+
+volumes:
+    pgdata: 
+        driver: local
