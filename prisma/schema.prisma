@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model atvpw_bkp_t02_usuario {
   t02_id                              BigInt?
   t02_descricao                       String?   @db.VarChar
@@ -50,6 +50,7 @@ model cidades {
   bairros bairros[]
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model clientes {
   cnpjcliente             String    @id @db.VarChar(45)
   fantasia                String?   @db.VarChar(255)
@@ -68,7 +69,7 @@ model clientes {
   telefone_fixo1          String?   @db.VarChar(45)
   telefone_fixo2          String?   @db.VarChar(45)
   celular                 String?   @db.VarChar(45)
-  senha_portal            String?   @db.VarChar(45)
+  senha_portal            String?   @db.VarChar(255)
   sn_verificado_sefaz     String    @default("N") @db.Char(1)
   inscricao_estadual      String?   @db.VarChar(45)
   data_inicio_atividades  DateTime? @db.Date
@@ -90,7 +91,11 @@ model clientes {
   cli_data_sincronizacao  DateTime  @default(dbgenerated("'2020-07-24 21:15:43.179464'::timestamp without time zone")) @db.Timestamp(6)
   origem_geocodificacao   String    @default("Base de Conhecimento (U)") @db.VarChar(255)
   habilitado              String?   @default("N") @db.Char(1)
+  cliente_id              BigInt?
+  token_push_notification String?   @db.VarChar(200)
+  email_enviado           Boolean   @default(false)
 
+  @@index([cliente_id], map: "idx_cliente_id")
   @@index([cep, longitude, latitude], map: "idx_clientes_cep_latitude_longitude")
   @@index([fantasia], map: "idx_clientes_fantasia")
   @@index([local_confirmado], map: "idx_clientes_local_confirmado_id")
@@ -107,6 +112,7 @@ model config_desvios {
   @@index([executor, ativo], map: "idx_ativo_executor")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model fila_kmRealizado {
   alias_db        String    @db.VarChar(255)
   empresa_id      Int
@@ -167,6 +173,12 @@ model log_sequenciamento_cliente {
   @@index([empresa, tipo_agrupamento, cliente_id], map: "idx_log_seq_cli_emp_tipo")
 }
 
+model migrations {
+  id        Int    @id(map: "PK_8c82d7f526340ab734260ea46be") @default(autoincrement())
+  timestamp BigInt
+  name      String @db.VarChar
+}
+
 model notificacao {
   id               Int      @id @default(autoincrement())
   title            String   @db.VarChar(255)
@@ -176,6 +188,42 @@ model notificacao {
   type             String?  @default("info") @db.VarChar
   times_to_show    Int      @default(1)
   active           Boolean? @default(true)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model pc010_permissoes_funcoes_painel_administrativo {
+  role_id                               String                                @db.VarChar
+  permission_id                         String                                @db.VarChar
+  created_at                            DateTime                              @default(now()) @db.Timestamp(6)
+  updated_at                            DateTime                              @default(now()) @db.Timestamp(6)
+  pc08_permissoes_painel_administrativo pc08_permissoes_painel_administrativo @relation(fields: [permission_id], references: [pc08_id], map: "fk_permissions_roles")
+  pc09_funcoes_painel_administrativo    pc09_funcoes_painel_administrativo    @relation(fields: [role_id], references: [pc09_id], map: "fk_roles_permissions")
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model pc011_funcoes_usuarios_painel_administrativo {
+  role_id                             String                              @db.VarChar
+  user_id                             String                              @db.VarChar
+  created_at                          DateTime                            @default(now()) @db.Timestamp(6)
+  updated_at                          DateTime                            @default(now()) @db.Timestamp(6)
+  pc09_funcoes_painel_administrativo  pc09_funcoes_painel_administrativo  @relation(fields: [role_id], references: [pc09_id], map: "fk_roles_user")
+  pc05_usuarios_painel_administrativo pc05_usuarios_painel_administrativo @relation(fields: [user_id], references: [pc05_id], map: "fk_users_roles")
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model pc012_permissoes_usuarios_portal_administrativo {
+  permission_id                         String                                @db.VarChar
+  user_id                               String                                @db.VarChar
+  created_at                            DateTime                              @default(now()) @db.Timestamp(6)
+  updated_at                            DateTime                              @default(now()) @db.Timestamp(6)
+  pc08_permissoes_painel_administrativo pc08_permissoes_painel_administrativo @relation(fields: [permission_id], references: [pc08_id], map: "fk_permissions_user")
+  pc05_usuarios_painel_administrativo   pc05_usuarios_painel_administrativo   @relation(fields: [user_id], references: [pc05_id], map: "fk_users_permissions")
+
+  @@ignore
 }
 
 model pc01_parameters {
@@ -217,6 +265,69 @@ model pc03_email_notification_send {
   pc03_status       String?   @db.VarChar
 }
 
+model pc04_entrega_avalicao {
+  pc04_id             Int      @id @default(autoincrement())
+  pc04_entrega_id     Int
+  pc04_avaliacao      Int
+  pc04_user_id        Int
+  pc04_data_avaliacao DateTime @db.Date
+  pc04_comentario     String?  @db.VarChar(300)
+}
+
+model pc05_usuarios_painel_administrativo {
+  pc05_id                                         String                                            @id @db.VarChar(255)
+  pc05_nome                                       String                                            @db.VarChar(50)
+  pc05_email                                      String                                            @unique @db.VarChar(255)
+  pc05_senha                                      String                                            @db.VarChar(255)
+  pc05_avatar                                     String?                                           @db.VarChar(255)
+  pc05_ultimo_login                               DateTime?                                         @db.Timestamp(6)
+  pc05_ativo                                      Boolean?
+  pc05_tipo                                       String?                                           @db.VarChar(50)
+  pc05_created_at                                 DateTime                                          @default(now()) @db.Timestamp(6)
+  pc05_updated_at                                 DateTime                                          @db.Timestamp(6)
+  pc011_funcoes_usuarios_painel_administrativo    pc011_funcoes_usuarios_painel_administrativo[]    @ignore
+  pc012_permissoes_usuarios_portal_administrativo pc012_permissoes_usuarios_portal_administrativo[] @ignore
+}
+
+model pc06_banner {
+  pc06_id         Int      @id @default(autoincrement())
+  pc06_apelido    String   @db.VarChar(255)
+  pc06_empresa_id Int
+  pc06_key        String   @db.VarChar(255)
+  pc06_link       String?  @db.VarChar(255)
+  pc06_ativo      Boolean?
+}
+
+model pc07_reset_senha {
+  pc07_id         String   @id @db.VarChar(255)
+  pc07_id_user    String   @db.VarChar(255)
+  pc07_key        String   @db.VarChar(255)
+  pc07_codigo     String   @db.VarChar(255)
+  pc07_status     Int
+  pc07_created_at DateTime @default(now()) @db.Timestamp(6)
+  pc07_updated_at DateTime @db.Timestamp(6)
+}
+
+model pc08_permissoes_painel_administrativo {
+  pc08_id                                         String                                            @id @db.VarChar(255)
+  pc08_nome                                       String                                            @unique @db.VarChar(50)
+  pc08_descricao                                  String                                            @db.VarChar(255)
+  pc08_created_at                                 DateTime                                          @default(now()) @db.Timestamp(6)
+  pc08_updated_at                                 DateTime                                          @db.Timestamp(6)
+  pc010_permissoes_funcoes_painel_administrativo  pc010_permissoes_funcoes_painel_administrativo[]  @ignore
+  pc012_permissoes_usuarios_portal_administrativo pc012_permissoes_usuarios_portal_administrativo[] @ignore
+}
+
+model pc09_funcoes_painel_administrativo {
+  pc09_id                                        String                                           @id @db.VarChar(255)
+  pc09_nome                                      String                                           @unique @db.VarChar(50)
+  pc09_descricao                                 String                                           @db.VarChar(255)
+  pc09_created_at                                DateTime                                         @default(now()) @db.Timestamp(6)
+  pc09_updated_at                                DateTime                                         @db.Timestamp(6)
+  pc010_permissoes_funcoes_painel_administrativo pc010_permissoes_funcoes_painel_administrativo[] @ignore
+  pc011_funcoes_usuarios_painel_administrativo   pc011_funcoes_usuarios_painel_administrativo[]   @ignore
+}
+
 model release_notes {
   rn_id             BigInt   @id @default(autoincrement())
   rn_titulo         String   @db.VarChar(255)
@@ -242,6 +353,24 @@ model servidores {
   aws_size_machine    String? @db.VarChar(250)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model servidores_bkp {
+  apelido             String? @db.VarChar
+  producao            Int?    @db.SmallInt
+  host                String? @db.VarChar
+  name                String? @db.VarChar
+  pindex              Int?
+  port                Int?
+  qtd_empresas        Int?
+  qtd_veiculos_ativos Int?
+  tipo                String? @db.VarChar
+  user                String? @db.VarChar
+  inativo             Int?    @db.SmallInt
+  aws_size_machine    String? @db.VarChar(250)
+
+  @@ignore
+}
+
 model sis00_parametros_padroes {
   sis00_id               BigInt  @id @default(autoincrement())
   sis00_label            String? @default("0") @db.VarChar(100)
@@ -264,6 +393,7 @@ model sis00_valor_parametro {
   sis00_vp_valorreal String? @db.VarChar(50)
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model sis01_empresa {
   sis01_id                               BigInt                 @id @default(autoincrement())
   sis01_situacao                         String                 @default("Pendente") @db.VarChar(100)
@@ -341,7 +471,7 @@ model sis01_empresa {
   @@index([sis01_id, sis01_bloqueada, sis01_str_conn_bd], map: "idx_id_bloqueada_connbd")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model sis01_empresa_bkpeng4139 {
   sis01_id                               BigInt?
   sis01_situacao                         String?   @db.VarChar(100)
@@ -438,13 +568,13 @@ model sis03_modulo_empresa {
   sis03_id         BigInt        @id @default(autoincrement())
   sis03_modulo_id  BigInt
   sis03_empresa_id BigInt
-  sis01_empresa    sis01_empresa @relation(fields: [sis03_empresa_id], references: [sis01_id], map: "fk_sis03_modulo_empresa_2")
   sis02_modulo     sis02_modulo  @relation(fields: [sis03_modulo_id], references: [sis02_id], map: "fk_sis03_modulo_empresa_1")
+  sis01_empresa    sis01_empresa @relation(fields: [sis03_empresa_id], references: [sis01_id], map: "fk_sis03_modulo_empresa_2")
 
   @@index([sis03_empresa_id], map: "sis03_idx_empresa")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model sis03_modulo_empresa_bkpeng4139 {
   sis03_id         BigInt?
   sis03_modulo_id  BigInt?
@@ -496,7 +626,7 @@ model sis06_menu_funcoes {
   sis06_id_componente           String?    @db.VarChar(45)
   sis06_id_tela                 String?    @db.VarChar(50)
   sis06_ordem_tela              String?    @db.VarChar(50)
-  sis04_menu                    sis04_menu @relation(fields: [sis06_menu_id], references: [sis04_id], map: "fk_sis06_menu_funcoes")
+  sis04_menu                    sis04_menu @relation(fields: [sis06_menu_id], references: [sis04_id], map: "fk_sis06_menu_funcoes_1")
 
   @@index([sis06_menu_id], map: "fk_sis06_menu_funcoes_1")
 }
@@ -538,6 +668,7 @@ model subdistrito {
   bairros   bairros @relation(fields: [bairro_id], references: [id], map: "FK_bairro_subdistrito")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model t02_usuario {
   t02_id                              BigInt         @id @default(autoincrement())
   t02_descricao                       String         @db.VarChar
@@ -562,10 +693,12 @@ model t02_usuario {
   t02_lang_user                       String?        @db.VarChar(5)
   t02_envia_email_data_sincronizacao  String         @default("N") @db.Char(1)
   t02_perfil_transportadora           String         @default("N") @db.Char(1)
+  t02_ocultar_botao_disp_formar_carga String?        @default("N") @db.Char(1)
+  t02_filiais_expedicao_alternativa   String?
   sis01_empresa                       sis01_empresa? @relation(fields: [t02_empresa_id], references: [sis01_id], onDelete: Restrict, map: "fk_t02_usuario_1")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model t02_usuario_bkpeng4139 {
   t02_id                              BigInt?
   t02_descricao                       String?   @db.VarChar
@@ -616,6 +749,7 @@ model t162_fila_processamento_integracao {
   @@index([t162_empresa_id, t162_status], map: "t162_empresa_id_t162_status")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model t16_cliente {
   t16_id                      BigInt    @default(autoincrement())
   t16_apelido_bd              String    @default("INTERNO") @db.VarChar(100)
@@ -665,9 +799,10 @@ model t16_cliente {
   @@index([t16_fantasia], map: "idx_t16_cliente_fantasia")
   @@index([t16_local_confirmado, t16_apelido_bd], map: "idx_t16_cliente_local_confirmado_id")
   @@index([t16_id], map: "idx_t16_cliente_t16_id")
-  @@index([t16_cnpjcliente], map: "trgm_idx_t16_cnpjcliente")
+  @@index([t16_cnpjcliente(ops: raw("gin_trgm_ops"))], map: "trgm_idx_t16_cnpjcliente", type: Gin)
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model t44_cliente_empresa {
   t44_apelido_bd                       String    @db.VarChar
   t44_empresa_id                       BigInt
@@ -681,4 +816,30 @@ model t44_cliente_empresa {
 
   @@id([t44_apelido_bd, t44_empresa_id, t44_cliente_id])
   @@index([t44_empresa_id], map: "idx_empresa")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model typeorm_metadata {
+  type     String  @db.VarChar
+  database String? @db.VarChar
+  schema   String? @db.VarChar
+  table    String? @db.VarChar
+  name     String? @db.VarChar
+  value    String?
+
+  @@ignore
+}
+
+model users_tokens {
+  id            String    @id @db.Uuid
+  refresh_token String?   @db.VarChar(255)
+  cnpj          String?   @db.VarChar(255)
+  expires_date  DateTime? @db.Timestamp(6)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  service       String?   @db.VarChar(255)
+}
+
+enum t02_ocultar_botao_disp_formar_carga {
+  S
+  N
 }
